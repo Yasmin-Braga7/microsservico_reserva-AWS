@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +5,35 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+// Modelo principal de Reserva
+model Reserva {
+  reserva_id                   Int       @id @default(autoincrement())
+  livro_id                     Int
+  usuario_id                   String    @db.VarChar(45)
+  reserva_data_criacao         DateTime  @default(now())
+  reserva_data_limite_retirada DateTime?
+  status                       Int       @default(1) // 1 = Ativa, 0 = Inativa (Eliminada)
+
+  historico ReservaHistorico[]
+
+  @@index([livro_id, usuario_id], map: "idx_res_liv_usr")
+  @@index([usuario_id], map: "idx_reserva_usr")
+  @@index([status], map: "idx_res_status")
+  @@map("reserva")
+}
+
+model ReservaHistorico {
+  reserva_historico_id              Int      @id @default(autoincrement())
+  reserva_id                        Int
+  reserva_historico_data_alteracao  DateTime @default(now())
+  reserva_historico_status_anterior Int?
+  reserva_historico_status_novo     Int
+  motivo                            String?  @db.VarChar(255)
+
+  reserva Reserva @relation(fields: [reserva_id], references: [reserva_id])
+
+  @@index([reserva_id], map: "idx_res_hist_fk")
+  @@map("reserva_historico")
 }
