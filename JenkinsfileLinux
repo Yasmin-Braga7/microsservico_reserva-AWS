@@ -1,0 +1,96 @@
+// JenkinsfileLinux – Linux/macOS Agent
+pipeline {
+    agent { label 'linux' }
+
+    environment {
+        SERVICE_NAME   = 'microsservico_reserva'
+        IMAGE_NAME     = "biblioteca/${SERVICE_NAME}"
+        IMAGE_TAG      = "${BUILD_NUMBER}"
+        CONTAINER_PORT = '9504'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm ci'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'npm test -- --forceExit --passWithNoTests'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                // Para e remove o container antigo (ignora erro se não existir)
+                sh "docker stop ${SERVICE_NAME} || true"
+                sh "docker rm   ${SERVICE_NAME} || true"
+
+                // Garante que a rede existe
+                sh "docker network create biblioteca_network 2>/dev/null || true"
+
+                // Sobe o novo container
+                sh """
+                    docker run -d \\
+                        --name ${SERVICE_NAME} \\
+                        --restart unless-stopped \\
+                        --network biblioteca_network \\
+                        -p ${CONTAINER_PORT}:${CONTAINER_PORT} \\
+                        --env-file .env \\
+                        ${IMAGE_NAME}:${IMAGE_TAG}
+                """
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                // Aguarda o serviço responder (até 60 s)
+                sh """
+                    for i in \$(seq 1 12); do
+                        curl -sf http://localhost:${CONTAINER_PORT}/health && break
+                        echo "Tentativa \$i/12 – aguardando 5s..."
+                        sleep 5
+                        if [ "\$i" -eq 12 ]; then
+                            echo "Health check falhou após 60s"
+                            exit 1
+                        fi
+                    done
+                    echo "Servico respondendo com sucesso!"
+                """
+            }
+        }
+
+        stage('Cleanup Old Images') {
+            steps {
+                // Remove imagens antigas (mantém as 3 mais recentes)
+                sh """
+                    docker images ${IMAGE_NAME} -q | tail -n +4 | xargs --no-run-if-empty docker rmi || true
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deploy do ${SERVICE_NAME} concluido com sucesso! (build #${BUILD_NUMBER})"
+        }
+        failure {
+            echo "FALHA no pipeline do ${SERVICE_NAME}. Verifique os logs acima."
+        }
+    }
+}
