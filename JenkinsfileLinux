@@ -1,96 +1,61 @@
-// JenkinsfileLinux – Linux/macOS Agent
 pipeline {
-    agent { label 'linux' }
-
-    environment {
-        SERVICE_NAME   = 'microsservico_reserva'
-        IMAGE_NAME     = "biblioteca/${SERVICE_NAME}"
-        IMAGE_TAG      = "${BUILD_NUMBER}"
-        CONTAINER_PORT = '9503'
-    }
+    agent any
 
     stages {
-
-        stage('Checkout') {
+        stage('Verificar Repositório') {
             steps {
-                checkout scm
+                
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: '*/main']], 
+                    doGenerateSubmoduleConfigurations: false, 
+                    extensions: [], 
+                    submoduleCfg: [], 
+                    userRemoteConfigs: [[url: 'https://github.com/Gugzz21/microsservico_reserva']]
+                ])
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Instalar Dependências') {
             steps {
-                sh 'npm ci'
+
+                sh 'npm install'
+                sh 'npx prisma generate'
             }
         }
 
-        stage('Run Tests') {
+        stage('Construir Imagem Docker') {
             steps {
-                sh 'npm test -- --forceExit --passWithNoTests'
+                script {
+                    
+                    def appName = 'micro-reserva'
+                    def imageTag = "${appName}:${env.BUILD_ID}"
+
+                    sh "docker build -t ${imageTag} ."
+                }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Fazer Deploy') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
-            }
-        }
+                script {
+                    def appName = 'micro-reserva'
+                    def imageTag = "${appName}:${env.BUILD_ID}"
 
-        stage('Deploy Container') {
-            steps {
-                // Para e remove o container antigo (ignora erro se não existir)
-                sh "docker stop ${SERVICE_NAME} || true"
-                sh "docker rm   ${SERVICE_NAME} || true"
-
-                // Garante que a rede existe
-                sh "docker network create biblioteca_network 2>/dev/null || true"
-
-                // Sobe o novo container
-                sh """
-                    docker run -d \\
-                        --name ${SERVICE_NAME} \\
-                        --restart unless-stopped \\
-                        --network biblioteca_network \\
-                        -p ${CONTAINER_PORT}:${CONTAINER_PORT} \\
-                        --env-file .env \\
-                        ${IMAGE_NAME}:${IMAGE_TAG}
-                """
-            }
-        }
-
-        stage('Health Check') {
-            steps {
-                // Aguarda o serviço responder (até 60 s)
-                sh """
-                    for i in \$(seq 1 12); do
-                        curl -sf http://localhost:${CONTAINER_PORT}/biblioteca/reserva && break
-                        echo "Tentativa \$i/12 – aguardando 5s..."
-                        sleep 5
-                        if [ "\$i" -eq 12 ]; then
-                            echo "Health check falhou após 60s"
-                            exit 1
-                        fi
-                    done
-                    echo "Servico respondendo com sucesso!"
-                """
-            }
-        }
-
-        stage('Cleanup Old Images') {
-            steps {
-                // Remove imagens antigas (mantém as 3 mais recentes)
-                sh """
-                    docker images ${IMAGE_NAME} -q | tail -n +4 | xargs --no-run-if-empty docker rmi || true
-                """
+                    sh "docker stop ${appName} || echo 0"
+                    sh "docker rm -v ${appName} || echo 0"
+                
+                    sh "docker run -d --name ${appName} -p 9503:9503 ${imageTag}"
+                }
             }
         }
     }
 
     post {
         success {
-            echo "Deploy do ${SERVICE_NAME} concluido com sucesso! (build #${BUILD_NUMBER})"
+            echo 'Deploy do micro-reserva realizado com sucesso!'
         }
         failure {
-            echo "FALHA no pipeline do ${SERVICE_NAME}. Verifique os logs acima."
+            echo 'Houve um erro durante o deploy do micro-reserva.'
         }
     }
 }
