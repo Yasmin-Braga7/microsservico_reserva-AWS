@@ -9,10 +9,10 @@ services:
     container_name: microsservico_reserva
     restart: unless-stopped
     ports:
-      - "9504:9504"
+      - "9503:9503"
     environment:
       NODE_ENV: production
-      PORT: 9504
+      PORT: 9503
       DATABASE_URL: ${DATABASE_URL}
       RABBITMQ_URL: ${RABBITMQ_URL}
     env_file:
@@ -20,7 +20,7 @@ services:
     networks:
       - biblioteca_network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9504/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9503/biblioteca/reserva"]
       interval: 30s
       timeout: 10s
       retries: 3

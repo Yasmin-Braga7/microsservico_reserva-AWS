@@ -32,6 +32,6 @@ COPY prisma ./prisma/
 # Copia o código-fonte
 COPY src ./src/
 
-EXPOSE 9504
+EXPOSE 9503
 
 CMD ["node", "src/server.js"]

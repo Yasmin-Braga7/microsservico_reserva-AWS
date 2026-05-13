@@ -6,7 +6,7 @@ pipeline {
         SERVICE_NAME  = 'microsservico_reserva'
         IMAGE_NAME    = "biblioteca/${env.SERVICE_NAME}"
         IMAGE_TAG     = "${env.BUILD_NUMBER}"
-        CONTAINER_PORT = '9504'
+        CONTAINER_PORT = '9503'
     }
 
     stages {
@@ -60,7 +60,7 @@ pipeline {
                 bat """
                     set TRIES=0
                     :loop
-                    curl -sf http://localhost:%CONTAINER_PORT%/health >nul 2>&1 && goto :ok
+                    curl -sf http://localhost:%CONTAINER_PORT%/biblioteca/reserva >nul 2>&1 && goto :ok
                     set /a TRIES+=1
                     if %TRIES% GEQ 12 (echo Health check falhou & exit /b 1)
                     timeout /t 5 /nobreak >nul

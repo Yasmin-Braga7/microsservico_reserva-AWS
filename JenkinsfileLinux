@@ -6,7 +6,7 @@ pipeline {
         SERVICE_NAME   = 'microsservico_reserva'
         IMAGE_NAME     = "biblioteca/${SERVICE_NAME}"
         IMAGE_TAG      = "${BUILD_NUMBER}"
-        CONTAINER_PORT = '9504'
+        CONTAINER_PORT = '9503'
     }
 
     stages {
@@ -62,7 +62,7 @@ pipeline {
                 // Aguarda o serviço responder (até 60 s)
                 sh """
                     for i in \$(seq 1 12); do
-                        curl -sf http://localhost:${CONTAINER_PORT}/health && break
+                        curl -sf http://localhost:${CONTAINER_PORT}/biblioteca/reserva && break
                         echo "Tentativa \$i/12 – aguardando 5s..."
                         sleep 5
                         if [ "\$i" -eq 12 ]; then
