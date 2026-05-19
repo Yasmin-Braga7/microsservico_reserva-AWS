@@ -1,23 +1,23 @@
 pipeline {
     agent any
 
+    // 1. Variáveis Globais de Ambiente
+    environment {
+        APP_NAME  = 'micro-reserva'
+        IMAGE_TAG = "${APP_NAME}:${env.BUILD_ID}"
+    }
+
     stages {
         stage('Verificar Repositório') {
             steps {
-                
-                checkout([$class: 'GitSCM', 
-                    branches: [[name: '*/main']], 
-                    doGenerateSubmoduleConfigurations: false, 
-                    extensions: [], 
-                    submoduleCfg: [], 
-                    userRemoteConfigs: [[url: 'https://github.com/Gugzz21/microsservico_reserva']]
-                ])
+                // 2. Sintaxe Git simplificada
+                git branch: 'main', url: 'https://github.com/Gugzz21/microsservico_reserva'
             }
         }
 
         stage('Instalar Dependências') {
             steps {
-
+                // Nota: Verifique a seção de Dicas Arquiteturais abaixo sobre esta etapa
                 bat 'npm install'
                 bat 'npx prisma generate'
             }
@@ -25,37 +25,28 @@ pipeline {
 
         stage('Construir Imagem Docker') {
             steps {
-                script {
-                    
-                    def appName = 'micro-reserva'
-                    def imageTag = "${appName}:${env.BUILD_ID}"
-
-                    bat "docker build -t ${imageTag} ."
-                }
+                // 3. Uso direto das variáveis de ambiente sem a necessidade do bloco 'script'
+                bat "docker build -t ${IMAGE_TAG} ."
             }
         }
 
         stage('Fazer Deploy') {
             steps {
-                script {
-                    def appName = 'micro-reserva'
-                    def imageTag = "${appName}:${env.BUILD_ID}"
-
-                    bat "docker stop ${appName} || echo 0"
-                    bat "docker rm -v ${appName} || echo 0"
+                // 4. Parar e remover o container antigo de forma segura
+                bat returnStatus: true, script: "docker rm -f ${APP_NAME}"
                 
-                    bat "docker run -d --name ${appName} -p 9503:9503 ${imageTag}"
-                }
+                // 5. Iniciar o novo container
+                bat "docker run -d --name ${APP_NAME} -p 9503:9503 ${IMAGE_TAG}"
             }
         }
     }
 
     post {
         success {
-            echo 'Deploy do micro-reserva realizado com sucesso!'
+            echo "Deploy do ${APP_NAME} realizado com sucesso!"
         }
         failure {
-            echo 'Houve um erro durante o deploy do micro-reserva.'
+            echo "Houve um erro durante o deploy do ${APP_NAME}."
         }
     }
 }
