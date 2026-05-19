@@ -1,26 +1,30 @@
-const ctrl = require('../controllers/reservas.controller');
+async function reservaRoutes(fastify, options) {
+    const { controller } = options;
 
-async function reservaRoutes(fastify) {
-    fastify.post('/', ctrl.criar);
-    fastify.get('/', ctrl.listarAtivas);
-    fastify.get('/:id', ctrl.buscarPorId);
-    fastify.put('/:id', ctrl.atualizarTotal);
-    fastify.patch('/:id/status', ctrl.alterarStatus);
-    fastify.delete('/:id', ctrl.deletar);
-    fastify.get('/:id/historico', ctrl.buscarHistorico);
-    fastify.get('/usuario/:usuario_id', ctrl.buscarPorUsuario);
-    fastify.get('/livro/:livro_id/fila', ctrl.listarFilaLivro);
-    fastify.patch('/:id/renovar', ctrl.renovar);
-    fastify.get('/status/:status', ctrl.buscarPorStatus);
-    fastify.get('/vencidas/listar', ctrl.listarVencidas);
-    fastify.patch('/lote/cancelar-vencidas', ctrl.cancelarVencidasLote);
-    fastify.delete('/usuario/:usuario_id/limpar', ctrl.limparPorUsuario);
-    fastify.get('/recentes/feed', ctrl.feedRecentes);
-    fastify.post('/validar-conflito', ctrl.validarConflito);
-    fastify.get('/metricas/pendentes', ctrl.contarPendentes);
-    fastify.get('/livro/:livro_id/contagem', ctrl.contarFilaLivro);
-    fastify.patch('/:id/notificar', ctrl.registrarNotificacao);
-    fastify.get('/historico/geral', ctrl.feedHistoricoGeral);
+    if (!controller) {
+        throw new Error('[reservaRoutes] ReservasController instance must be provided in options.');
+    }
+
+    fastify.post('/', controller.criar);
+    fastify.get('/', controller.listarAtivas);
+    fastify.get('/:id', controller.buscarPorId);
+    fastify.put('/:id', controller.atualizarTotal);
+    fastify.patch('/:id/status', controller.alterarStatus);
+    fastify.delete('/:id', controller.deletar);
+    fastify.get('/:id/historico', controller.buscarHistorico);
+    fastify.get('/usuario/:usuario_id', controller.buscarPorUsuario);
+    fastify.get('/livro/:livro_id/fila', controller.listarFilaLivro);
+    fastify.patch('/:id/renovar', controller.renovar);
+    fastify.get('/status/:status', controller.buscarPorStatus);
+    fastify.get('/vencidas/listar', controller.listarVencidas);
+    fastify.patch('/lote/cancelar-vencidas', controller.cancelarVencidasLote);
+    fastify.delete('/usuario/:usuario_id/limpar', controller.limparPorUsuario);
+    fastify.get('/recentes/feed', controller.feedRecentes);
+    fastify.post('/validar-conflito', controller.validarConflito);
+    fastify.get('/metricas/pendentes', controller.contarPendentes);
+    fastify.get('/livro/:livro_id/contagem', controller.contarFilaLivro);
+    fastify.patch('/:id/notificar', controller.registrarNotificacao);
+    fastify.get('/historico/geral', controller.feedHistoricoGeral);
 }
 
 module.exports = reservaRoutes;

@@ -2,26 +2,37 @@
  * src/tests/reserva.test.js
  *
  * Testes de todos os endpoints do microsserviço de reservas.
- * O Prisma e o RabbitMQ são mockados — nenhuma conexão real é necessária.
+ * O controlador é mockado e injetado — nenhuma conexão real com DB ou RabbitMQ é necessária.
  */
 
-// ─── Mocks (antes de qualquer require do módulo real) ─────────────────────────
-jest.mock('../services/reserva.service');
-jest.mock('../config/rabbitmq', () => ({
-    connect: jest.fn().mockResolvedValue(true),
-    publish: jest.fn().mockResolvedValue(true),
-    close: jest.fn().mockResolvedValue(true),
-    EVENTS: {
-        RESERVA_CRIADA: 'RESERVA_CRIADA',
-        RESERVA_CANCELADA: 'RESERVA_CANCELADA',
-    },
-}));
+// ─── Mocks do Controlador ───────────────────────────────────────────────────
+const mockController = {
+    criar: jest.fn(),
+    listarAtivas: jest.fn(),
+    buscarPorId: jest.fn(),
+    atualizarTotal: jest.fn(),
+    alterarStatus: jest.fn(),
+    deletar: jest.fn(),
+    buscarHistorico: jest.fn(),
+    buscarPorUsuario: jest.fn(),
+    listarFilaLivro: jest.fn(),
+    renovar: jest.fn(),
+    buscarPorStatus: jest.fn(),
+    listarVencidas: jest.fn(),
+    cancelarVencidasLote: jest.fn(),
+    limparPorUsuario: jest.fn(),
+    feedRecentes: jest.fn(),
+    validarConflito: jest.fn(),
+    contarPendentes: jest.fn(),
+    contarFilaLivro: jest.fn(),
+    registrarNotificacao: jest.fn(),
+    feedHistoricoGeral: jest.fn()
+};
 
 const fastify = require('fastify')();
 const reservaRoutes = require('../routes/reserva.routes');
-const service = require('../services/reserva.service');
 
-fastify.register(reservaRoutes);
+fastify.register(reservaRoutes, { controller: mockController });
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 const reservaMock = {
@@ -50,7 +61,9 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── POST /  ──────────────────────────────────────────────────────────────
     test('POST / — deve criar uma reserva (201)', async () => {
-        service.criar.mockResolvedValue(reservaMock);
+        mockController.criar.mockImplementationOnce((req, reply) => {
+            return reply.code(201).send({ success: true, data: reservaMock });
+        });
 
         const res = await fastify.inject({
             method: 'POST',
@@ -60,12 +73,14 @@ describe('Reservas API — todos os endpoints', () => {
 
         expect(res.statusCode).toBe(201);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: reservaMock });
-        expect(service.criar).toHaveBeenCalledTimes(1);
+        expect(mockController.criar).toHaveBeenCalledTimes(1);
     });
 
     // ── GET /  ───────────────────────────────────────────────────────────────
     test('GET / — deve retornar lista de reservas ativas (200)', async () => {
-        service.listarAtivas.mockResolvedValue([reservaMock]);
+        mockController.listarAtivas.mockImplementationOnce((req, reply) => {
+            return reply.code(200).send({ success: true, data: [reservaMock] });
+        });
 
         const res = await fastify.inject({ method: 'GET', url: '/' });
 
@@ -75,19 +90,26 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── GET /:id  ─────────────────────────────────────────────────────────────
     test('GET /:id — deve buscar reserva por id (200)', async () => {
-        service.buscarPorId.mockResolvedValue(reservaMock);
+        mockController.buscarPorId.mockImplementationOnce((req, reply) => {
+            expect(req.params.id).toBe('1');
+            return reply.code(200).send({ success: true, data: reservaMock });
+        });
 
         const res = await fastify.inject({ method: 'GET', url: '/1' });
 
         expect(res.statusCode).toBe(200);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: reservaMock });
-        expect(service.buscarPorId).toHaveBeenCalledWith('1');
+        expect(mockController.buscarPorId).toHaveBeenCalledTimes(1);
     });
 
     // ── PUT /:id  ─────────────────────────────────────────────────────────────
     test('PUT /:id — deve atualizar reserva totalmente (200)', async () => {
         const atualizada = { ...reservaMock, livro_id: 99 };
-        service.atualizarTotal.mockResolvedValue(atualizada);
+        mockController.atualizarTotal.mockImplementationOnce((req, reply) => {
+            expect(req.params.id).toBe('1');
+            expect(req.body).toEqual({ livro_id: 99 });
+            return reply.code(200).send({ success: true, data: atualizada });
+        });
 
         const res = await fastify.inject({
             method: 'PUT',
@@ -102,7 +124,11 @@ describe('Reservas API — todos os endpoints', () => {
     // ── PATCH /:id/status  ────────────────────────────────────────────────────
     test('PATCH /:id/status — deve alterar status (200)', async () => {
         const alterada = { ...reservaMock, status: 2 };
-        service.alterarStatus.mockResolvedValue(alterada);
+        mockController.alterarStatus.mockImplementationOnce((req, reply) => {
+            expect(req.params.id).toBe('1');
+            expect(req.body).toEqual({ status_novo: 2, motivo: 'Cancelado pelo usuário' });
+            return reply.code(200).send({ success: true, data: alterada });
+        });
 
         const res = await fastify.inject({
             method: 'PATCH',
@@ -116,7 +142,10 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── DELETE /:id  ──────────────────────────────────────────────────────────
     test('DELETE /:id — deve deletar logicamente (204)', async () => {
-        service.deletarLogico.mockResolvedValue(undefined);
+        mockController.deletar.mockImplementationOnce((req, reply) => {
+            expect(req.params.id).toBe('1');
+            return reply.code(204).send();
+        });
 
         const res = await fastify.inject({ method: 'DELETE', url: '/1' });
 
@@ -126,7 +155,10 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── GET /:id/historico  ───────────────────────────────────────────────────
     test('GET /:id/historico — deve retornar histórico da reserva (200)', async () => {
-        service.buscarHistorico.mockResolvedValue([historicoMock]);
+        mockController.buscarHistorico.mockImplementationOnce((req, reply) => {
+            expect(req.params.id).toBe('1');
+            return reply.code(200).send({ success: true, data: [historicoMock] });
+        });
 
         const res = await fastify.inject({ method: 'GET', url: '/1/historico' });
 
@@ -136,18 +168,23 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── GET /usuario/:usuario_id  ─────────────────────────────────────────────
     test('GET /usuario/:usuario_id — deve buscar reservas por usuário (200)', async () => {
-        service.buscarPorUsuario.mockResolvedValue([reservaMock]);
+        mockController.buscarPorUsuario.mockImplementationOnce((req, reply) => {
+            expect(req.params.usuario_id).toBe('usr-001');
+            return reply.code(200).send({ success: true, data: [reservaMock] });
+        });
 
         const res = await fastify.inject({ method: 'GET', url: '/usuario/usr-001' });
 
         expect(res.statusCode).toBe(200);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: [reservaMock] });
-        expect(service.buscarPorUsuario).toHaveBeenCalledWith('usr-001');
     });
 
     // ── GET /livro/:livro_id/fila  ────────────────────────────────────────────
     test('GET /livro/:livro_id/fila — deve listar fila do livro (200)', async () => {
-        service.listarFilaLivro.mockResolvedValue([reservaMock]);
+        mockController.listarFilaLivro.mockImplementationOnce((req, reply) => {
+            expect(req.params.livro_id).toBe('10');
+            return reply.code(200).send({ success: true, data: [reservaMock] });
+        });
 
         const res = await fastify.inject({ method: 'GET', url: '/livro/10/fila' });
 
@@ -158,7 +195,11 @@ describe('Reservas API — todos os endpoints', () => {
     // ── PATCH /:id/renovar  ───────────────────────────────────────────────────
     test('PATCH /:id/renovar — deve renovar data limite (200)', async () => {
         const renovada = { ...reservaMock, reserva_data_limite_retirada: '2026-12-31' };
-        service.renovar.mockResolvedValue(renovada);
+        mockController.renovar.mockImplementationOnce((req, reply) => {
+            expect(req.params.id).toBe('1');
+            expect(req.body).toEqual({ nova_data: '2026-12-31' });
+            return reply.code(200).send({ success: true, data: renovada });
+        });
 
         const res = await fastify.inject({
             method: 'PATCH',
@@ -172,18 +213,22 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── GET /status/:status  ──────────────────────────────────────────────────
     test('GET /status/:status — deve buscar reservas por status (200)', async () => {
-        service.buscarPorStatus.mockResolvedValue([reservaMock]);
+        mockController.buscarPorStatus.mockImplementationOnce((req, reply) => {
+            expect(req.params.status).toBe('1');
+            return reply.code(200).send({ success: true, data: [reservaMock] });
+        });
 
         const res = await fastify.inject({ method: 'GET', url: '/status/1' });
 
         expect(res.statusCode).toBe(200);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: [reservaMock] });
-        expect(service.buscarPorStatus).toHaveBeenCalledWith('1');
     });
 
     // ── GET /vencidas/listar  ─────────────────────────────────────────────────
     test('GET /vencidas/listar — deve listar reservas vencidas (200)', async () => {
-        service.listarVencidas.mockResolvedValue([reservaMock]);
+        mockController.listarVencidas.mockImplementationOnce((req, reply) => {
+            return reply.code(200).send({ success: true, data: [reservaMock] });
+        });
 
         const res = await fastify.inject({ method: 'GET', url: '/vencidas/listar' });
 
@@ -193,7 +238,9 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── PATCH /lote/cancelar-vencidas  ────────────────────────────────────────
     test('PATCH /lote/cancelar-vencidas — deve cancelar vencidas em lote (200)', async () => {
-        service.cancelarVencidasLote.mockResolvedValue({ count: 3 });
+        mockController.cancelarVencidasLote.mockImplementationOnce((req, reply) => {
+            return reply.code(200).send({ success: true, data: { count: 3 } });
+        });
 
         const res = await fastify.inject({ method: 'PATCH', url: '/lote/cancelar-vencidas' });
 
@@ -203,7 +250,10 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── DELETE /usuario/:usuario_id/limpar  ───────────────────────────────────
     test('DELETE /usuario/:usuario_id/limpar — deve limpar reservas do usuário (200)', async () => {
-        service.limparPorUsuario.mockResolvedValue({ count: 2 });
+        mockController.limparPorUsuario.mockImplementationOnce((req, reply) => {
+            expect(req.params.usuario_id).toBe('usr-001');
+            return reply.code(200).send({ success: true, data: { count: 2 } });
+        });
 
         const res = await fastify.inject({ method: 'DELETE', url: '/usuario/usr-001/limpar' });
 
@@ -213,7 +263,9 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── GET /recentes/feed  ───────────────────────────────────────────────────
     test('GET /recentes/feed — deve retornar feed de recentes (200)', async () => {
-        service.feedRecentes.mockResolvedValue([reservaMock]);
+        mockController.feedRecentes.mockImplementationOnce((req, reply) => {
+            return reply.code(200).send({ success: true, data: [reservaMock] });
+        });
 
         const res = await fastify.inject({ method: 'GET', url: '/recentes/feed' });
 
@@ -223,7 +275,10 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── POST /validar-conflito  ───────────────────────────────────────────────
     test('POST /validar-conflito — deve validar conflito (200)', async () => {
-        service.validarConflito.mockResolvedValue({ conflito: false, count: 0 });
+        mockController.validarConflito.mockImplementationOnce((req, reply) => {
+            expect(req.body).toEqual({ usuario_id: 'usr-001', livro_id: 10 });
+            return reply.code(200).send({ success: true, data: { conflito: false, count: 0 } });
+        });
 
         const res = await fastify.inject({
             method: 'POST',
@@ -237,7 +292,9 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── GET /metricas/pendentes  ──────────────────────────────────────────────
     test('GET /metricas/pendentes — deve contar pendentes (200)', async () => {
-        service.contarPendentes.mockResolvedValue({ total_pendentes: 7 });
+        mockController.contarPendentes.mockImplementationOnce((req, reply) => {
+            return reply.code(200).send({ success: true, data: { total_pendentes: 7 } });
+        });
 
         const res = await fastify.inject({ method: 'GET', url: '/metricas/pendentes' });
 
@@ -247,7 +304,10 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── GET /livro/:livro_id/contagem  ────────────────────────────────────────
     test('GET /livro/:livro_id/contagem — deve contar fila do livro (200)', async () => {
-        service.contarFilaLivro.mockResolvedValue({ fila_tamanho: 4 });
+        mockController.contarFilaLivro.mockImplementationOnce((req, reply) => {
+            expect(req.params.livro_id).toBe('10');
+            return reply.code(200).send({ success: true, data: { fila_tamanho: 4 } });
+        });
 
         const res = await fastify.inject({ method: 'GET', url: '/livro/10/contagem' });
 
@@ -257,7 +317,11 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── PATCH /:id/notificar  ─────────────────────────────────────────────────
     test('PATCH /:id/notificar — deve registrar notificação (200)', async () => {
-        service.registrarNotificacao.mockResolvedValue(historicoMock);
+        mockController.registrarNotificacao.mockImplementationOnce((req, reply) => {
+            expect(req.params.id).toBe('1');
+            expect(req.body).toEqual({ motivo: 'Notificação de prazo' });
+            return reply.code(200).send({ success: true, data: historicoMock });
+        });
 
         const res = await fastify.inject({
             method: 'PATCH',
@@ -271,7 +335,9 @@ describe('Reservas API — todos os endpoints', () => {
 
     // ── GET /historico/geral  ─────────────────────────────────────────────────
     test('GET /historico/geral — deve retornar feed do histórico geral (200)', async () => {
-        service.feedHistoricoGeral.mockResolvedValue([historicoMock]);
+        mockController.feedHistoricoGeral.mockImplementationOnce((req, reply) => {
+            return reply.code(200).send({ success: true, data: [historicoMock] });
+        });
 
         const res = await fastify.inject({ method: 'GET', url: '/historico/geral' });
 
