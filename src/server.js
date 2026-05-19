@@ -1,8 +1,6 @@
 const fastify = require('fastify')({ logger: true });
 const reservaRoutes = require('./routes/reserva.routes');
 
-// Registrar rotas
-fastify.register(reservaRoutes, { prefix: '/reservas' });
 fastify.register(reservaRoutes, { prefix: '/biblioteca/reserva' });
 
 const start = async () => {
