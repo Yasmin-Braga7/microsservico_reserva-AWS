@@ -8,6 +8,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@infisical/sdk": "^5.0.2",
     "@prisma/client": "^5.22.0",
     "amqplib": "^2.0.1",
     "dotenv": "^17.4.2",
