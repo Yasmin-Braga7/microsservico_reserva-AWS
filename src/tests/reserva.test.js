@@ -67,7 +67,7 @@ describe('Reservas API — todos os endpoints', () => {
 
         const res = await fastify.inject({
             method: 'POST',
-            url: '/',
+            url: '/criar',
             payload: { livro_id: 10, usuario_id: 'usr-001' },
         });
 
@@ -82,7 +82,7 @@ describe('Reservas API — todos os endpoints', () => {
             return reply.code(200).send({ success: true, data: [reservaMock] });
         });
 
-        const res = await fastify.inject({ method: 'GET', url: '/' });
+        const res = await fastify.inject({ method: 'GET', url: '/listar-ativas' });
 
         expect(res.statusCode).toBe(200);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: [reservaMock] });
@@ -95,7 +95,7 @@ describe('Reservas API — todos os endpoints', () => {
             return reply.code(200).send({ success: true, data: reservaMock });
         });
 
-        const res = await fastify.inject({ method: 'GET', url: '/1' });
+        const res = await fastify.inject({ method: 'GET', url: '/listar/1' });
 
         expect(res.statusCode).toBe(200);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: reservaMock });
@@ -113,7 +113,7 @@ describe('Reservas API — todos os endpoints', () => {
 
         const res = await fastify.inject({
             method: 'PUT',
-            url: '/1',
+            url: '/atualizar/1',
             payload: { livro_id: 99 },
         });
 
@@ -132,7 +132,7 @@ describe('Reservas API — todos os endpoints', () => {
 
         const res = await fastify.inject({
             method: 'PATCH',
-            url: '/1/status',
+            url: '/atualizar-status/1',
             payload: { status_novo: 2, motivo: 'Cancelado pelo usuário' },
         });
 
@@ -147,7 +147,7 @@ describe('Reservas API — todos os endpoints', () => {
             return reply.code(204).send();
         });
 
-        const res = await fastify.inject({ method: 'DELETE', url: '/1' });
+        const res = await fastify.inject({ method: 'DELETE', url: '/deletar/1' });
 
         expect(res.statusCode).toBe(204);
         expect(res.body).toBe('');
@@ -160,7 +160,7 @@ describe('Reservas API — todos os endpoints', () => {
             return reply.code(200).send({ success: true, data: [historicoMock] });
         });
 
-        const res = await fastify.inject({ method: 'GET', url: '/1/historico' });
+        const res = await fastify.inject({ method: 'GET', url: '/historico/1' });
 
         expect(res.statusCode).toBe(200);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: [historicoMock] });
@@ -173,7 +173,7 @@ describe('Reservas API — todos os endpoints', () => {
             return reply.code(200).send({ success: true, data: [reservaMock] });
         });
 
-        const res = await fastify.inject({ method: 'GET', url: '/usuario/usr-001' });
+        const res = await fastify.inject({ method: 'GET', url: '/usuario/listar/usr-001' });
 
         expect(res.statusCode).toBe(200);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: [reservaMock] });
@@ -186,7 +186,7 @@ describe('Reservas API — todos os endpoints', () => {
             return reply.code(200).send({ success: true, data: [reservaMock] });
         });
 
-        const res = await fastify.inject({ method: 'GET', url: '/livro/10/fila' });
+        const res = await fastify.inject({ method: 'GET', url: '/livro/listar-fila/10' });
 
         expect(res.statusCode).toBe(200);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: [reservaMock] });
@@ -203,7 +203,7 @@ describe('Reservas API — todos os endpoints', () => {
 
         const res = await fastify.inject({
             method: 'PATCH',
-            url: '/1/renovar',
+            url: '/atualizar-data/1',
             payload: { nova_data: '2026-12-31' },
         });
 
@@ -218,7 +218,7 @@ describe('Reservas API — todos os endpoints', () => {
             return reply.code(200).send({ success: true, data: [reservaMock] });
         });
 
-        const res = await fastify.inject({ method: 'GET', url: '/status/1' });
+        const res = await fastify.inject({ method: 'GET', url: '/status/listar/1' });
 
         expect(res.statusCode).toBe(200);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: [reservaMock] });
@@ -255,7 +255,7 @@ describe('Reservas API — todos os endpoints', () => {
             return reply.code(200).send({ success: true, data: { count: 2 } });
         });
 
-        const res = await fastify.inject({ method: 'DELETE', url: '/usuario/usr-001/limpar' });
+        const res = await fastify.inject({ method: 'DELETE', url: '/usuario/limpar/usr-001' });
 
         expect(res.statusCode).toBe(200);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: { count: 2 } });
@@ -309,7 +309,7 @@ describe('Reservas API — todos os endpoints', () => {
             return reply.code(200).send({ success: true, data: { fila_tamanho: 4 } });
         });
 
-        const res = await fastify.inject({ method: 'GET', url: '/livro/10/contagem' });
+        const res = await fastify.inject({ method: 'GET', url: '/livro/contagem/10' });
 
         expect(res.statusCode).toBe(200);
         expect(JSON.parse(res.body)).toEqual({ success: true, data: { fila_tamanho: 4 } });
@@ -325,7 +325,7 @@ describe('Reservas API — todos os endpoints', () => {
 
         const res = await fastify.inject({
             method: 'PATCH',
-            url: '/1/notificar',
+            url: '/registrar-notificacao/1',
             payload: { motivo: 'Notificação de prazo' },
         });
 
