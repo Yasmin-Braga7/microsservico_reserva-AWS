@@ -2,6 +2,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Instalar OpenSSL para que o Prisma gere o engine correto
+RUN apk add --no-cache openssl
+
 COPY package*.json ./
 RUN npm ci
 
@@ -13,6 +16,9 @@ FROM node:20-alpine AS production
 WORKDIR /app
 
 ENV NODE_ENV=production
+
+# Instalar OpenSSL no ambiente de execução de produção
+RUN apk add --no-cache openssl
 
 COPY package*.json ./
 
