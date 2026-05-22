@@ -7,33 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Modelo principal de Reserva
 model Reserva {
-  reserva_id                   Int       @id @default(autoincrement())
-  livro_id                     Int
-  usuario_id                   String    @db.VarChar(45)
-  reserva_data_criacao         DateTime  @default(now())
-  reserva_data_limite_retirada DateTime?
-  status                       Int       @default(1) // 1 = Ativa, 0 = Inativa (Eliminada)
+  reserva_id           Int                @id @default(autoincrement())
+  livro_id             Int
+  usuario_id           Int
+  reserva_data_reserva DateTime           @db.DateTime(0)
+  reserva_posicao_fila Int
+  reserva_status       Int
+  historico            ReservaHistorico[]
 
-  historico ReservaHistorico[]
-
-  @@index([livro_id, usuario_id], map: "idx_res_liv_usr")
-  @@index([usuario_id], map: "idx_reserva_usr")
-  @@index([status], map: "idx_res_status")
   @@map("reserva")
 }
 
 model ReservaHistorico {
-  reserva_historico_id              Int      @id @default(autoincrement())
-  reserva_id                        Int
-  reserva_historico_data_alteracao  DateTime @default(now())
-  reserva_historico_status_anterior Int?
-  reserva_historico_status_novo     Int
-  motivo                            String?  @db.VarChar(255)
+  reserva_historico_id     Int      @id @default(autoincrement())
+  reserva_historico_data   DateTime @db.DateTime(0)
+  reserva_historico_status Int?
+  reserva_id               Int
+  reserva                  Reserva  @relation(fields: [reserva_id], references: [reserva_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_reserva_historico_reserva")
 
-  reserva Reserva @relation(fields: [reserva_id], references: [reserva_id])
-
-  @@index([reserva_id], map: "idx_res_hist_fk")
+  @@index([reserva_id], map: "fk_reserva_historico_reserva_idx")
   @@map("reserva_historico")
 }
