@@ -3,15 +3,15 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 // Modelo principal de Reserva
 model Reserva {
   reserva_id                   Int       @id @default(autoincrement())
   livro_id                     Int
-  usuario_id                   String
+  usuario_id                   String    @db.VarChar(45)
   reserva_data_criacao         DateTime  @default(now())
   reserva_data_limite_retirada DateTime?
   status                       Int       @default(1) // 1 = Ativa, 0 = Inativa (Eliminada)
@@ -30,7 +30,7 @@ model ReservaHistorico {
   reserva_historico_data_alteracao  DateTime @default(now())
   reserva_historico_status_anterior Int?
   reserva_historico_status_novo     Int
-  motivo                            String?
+  motivo                            String?  @db.VarChar(255)
 
   reserva Reserva @relation(fields: [reserva_id], references: [reserva_id])
 

@@ -1,0 +1,460 @@
+{
+  "info": {
+    "_postman_id": "5057a455-d190-4689-9c10-2c34ce092ba4",
+    "name": "Microsservico de Reservas - Biblioteca",
+    "description": "Coleção para testar todos os 20 endpoints do microsserviço de reservas de livros.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Criar Reserva",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"livro_id\": 101,\n  \"usuario_id\": \"usr-10\",\n  \"data_limite\": \"2026-05-30T12:00:00Z\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/criar",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "criar"
+          ]
+        },
+        "description": "Cria uma nova reserva para um usuário e livro."
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Reservas Ativas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/listar-ativas",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "listar-ativas"
+          ]
+        },
+        "description": "Lista todas as reservas que estão com status ativo (diferente de 0)."
+      },
+      "response": []
+    },
+    {
+      "name": "Buscar Reserva por ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/listar/1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "listar",
+            "1"
+          ]
+        },
+        "description": "Obtém os detalhes de uma reserva específica informando o ID da reserva."
+      },
+      "response": []
+    },
+    {
+      "name": "Atualizar Reserva Total",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"livro_id\": 105,\n  \"usuario_id\": \"usr-50\",\n  \"data_limite\": \"2026-06-15T00:00:00Z\",\n  \"status\": 1\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/atualizar/1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "atualizar",
+            "1"
+          ]
+        },
+        "description": "Atualiza todos os campos de uma reserva pelo ID."
+      },
+      "response": []
+    },
+    {
+      "name": "Alterar Status da Reserva",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status_novo\": 0,\n  \"motivo\": \"Reserva cancelada pelo sistema\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/atualizar-status/2",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "atualizar-status",
+            "2"
+          ]
+        },
+        "description": "Altera o status de uma reserva específica e registra no histórico."
+      },
+      "response": []
+    },
+    {
+      "name": "Deletar Reserva (Lógica)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/deletar/2",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "deletar",
+            "2"
+          ]
+        },
+        "description": "Realiza a exclusão lógica de uma reserva (muda o status para 0)."
+      },
+      "response": []
+    },
+    {
+      "name": "Buscar Histórico de uma Reserva",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/historico/1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "historico",
+            "1"
+          ]
+        },
+        "description": "Retorna o histórico de alterações de status e notificações de uma reserva específica."
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Reservas de um Usuário",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/usuario/listar/usr-10",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "usuario",
+            "listar",
+            "usr-10"
+          ]
+        },
+        "description": "Retorna todas as reservas ativas associadas a um usuário específico."
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Fila de Espera por Livro",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/livro/listar-fila/101",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "livro",
+            "listar-fila",
+            "101"
+          ]
+        },
+        "description": "Retorna as reservas ativas de um livro específico, ordenadas cronologicamente (fila de espera)."
+      },
+      "response": []
+    },
+    {
+      "name": "Renovar Data Limite de Retirada",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nova_data\": \"2026-06-10T18:00:00Z\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/atualizar-data/1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "atualizar-data",
+            "1"
+          ]
+        },
+        "description": "Renova a data limite de retirada de uma reserva."
+      },
+      "response": []
+    },
+    {
+      "name": "Buscar Reservas por Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/status/listar/1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "status",
+            "listar",
+            "1"
+          ]
+        },
+        "description": "Filtra as reservas pelo status (ex: 1 para ativas, 0 para inativas)."
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Reservas Vencidas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/vencidas/listar",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "vencidas",
+            "listar"
+          ]
+        },
+        "description": "Retorna todas as reservas ativas cuja data limite de retirada é anterior ao momento atual."
+      },
+      "response": []
+    },
+    {
+      "name": "Cancelar Vencidas em Lote",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/lote/cancelar-vencidas",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "lote",
+            "cancelar-vencidas"
+          ]
+        },
+        "description": "Inativa todas as reservas que passaram da data de retirada."
+      },
+      "response": []
+    },
+    {
+      "name": "Limpar Reservas de Usuário",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/usuario/limpar/usr-10",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "usuario",
+            "limpar",
+            "usr-10"
+          ]
+        },
+        "description": "Cancela todas as reservas ativas de um usuário em lote."
+      },
+      "response": []
+    },
+    {
+      "name": "Feed de Reservas Recentes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/recentes/feed",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "recentes",
+            "feed"
+          ]
+        },
+        "description": "Retorna as 10 reservas ativas criadas mais recentemente."
+      },
+      "response": []
+    },
+    {
+      "name": "Validar Conflito de Reserva",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"usuario_id\": \"usr-10\",\n  \"livro_id\": 101\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/validar-conflito",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "validar-conflito"
+          ]
+        },
+        "description": "Verifica se já existe uma reserva ativa para o mesmo usuário e livro para evitar duplicidades."
+      },
+      "response": []
+    },
+    {
+      "name": "Métricas: Contar Pendentes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/metricas/pendentes",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "metricas",
+            "pendentes"
+          ]
+        },
+        "description": "Retorna o total de reservas ativas."
+      },
+      "response": []
+    },
+    {
+      "name": "Métricas: Tamanho da Fila do Livro",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/livro/contagem/101",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "livro",
+            "contagem",
+            "101"
+          ]
+        },
+        "description": "Retorna a quantidade de pessoas na fila de espera para um livro específico."
+      },
+      "response": []
+    },
+    {
+      "name": "Registrar Notificação no Histórico",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"motivo\": \"E-mail de lembrete de retirada enviado\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/registrar-notificacao/1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "registrar-notificacao",
+            "1"
+          ]
+        },
+        "description": "Adiciona um registro de notificação no histórico da reserva sem alterar o status dela."
+      },
+      "response": []
+    },
+    {
+      "name": "Feed do Histórico Geral",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/historico/geral",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "historico",
+            "geral"
+          ]
+        },
+        "description": "Retorna um feed geral das últimas 50 movimentações/históricos de reservas."
+      },
+      "response": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:9503/biblioteca/reserva",
+      "type": "string"
+    }
+  ]
+}
