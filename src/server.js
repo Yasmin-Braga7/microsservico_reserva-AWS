@@ -27,6 +27,12 @@ const start = async () => {
     const reservaService = new ReservaService(reservaRepository, eventPublisher);
     const controller = new ReservasController(reservaService);
 
+    // Inicialização do Consumidor RabbitMQ para eventos de Empréstimo
+    const { initConsumer } = require('./infrastructure/messaging/rabbitmq.consumer');
+    initConsumer(rabbitmq, reservaRepository).catch(err => {
+      console.error('[ReservaConsumer] Falha ao iniciar consumer:', err.message);
+    });
+
     // 4. Configuração do Servidor Web (Fastify)
     const fastify = require('fastify')({ logger: true });
     const reservaRoutes = require('./routes/reserva.routes');
