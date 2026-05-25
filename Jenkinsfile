@@ -3,7 +3,7 @@ pipeline {
 
     // 1. Variáveis Globais de Ambiente
     environment {
-        APP_NAME  = 'micro-reserva'
+        APP_NAME  = 'microsservico-reserva_biblioteca'
         IMAGE_TAG = "${APP_NAME}:${env.BUILD_ID}"
     }
 
