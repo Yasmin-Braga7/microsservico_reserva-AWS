@@ -35,7 +35,13 @@ const start = async () => {
 
     // 4. Configuração do Servidor Web (Fastify)
     const fastify = require('fastify')({ logger: true });
+    const cors = require('@fastify/cors');
     const reservaRoutes = require('./routes/reserva.routes');
+
+    // Configuração do CORS
+    await fastify.register(cors, {
+      origin: '*'
+    });
 
     // Registra o tratador global de erros (Clean Code - Error Handling)
     fastify.setErrorHandler((error, request, reply) => {
