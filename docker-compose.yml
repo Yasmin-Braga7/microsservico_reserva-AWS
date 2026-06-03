@@ -1,12 +1,12 @@
 version: '3.9'
 
 services:
-  microsservico_reserva:
+  biblioteca-reserva:
     build:
       context: .
       dockerfile: Dockerfile
       target: production
-    container_name: microsservico_reserva
+    container_name: biblioteca-reserva
     restart: unless-stopped
     ports:
       - "9503:9503"

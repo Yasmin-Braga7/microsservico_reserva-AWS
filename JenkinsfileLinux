@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME  = 'micro-reserva'
+        APP_NAME  = 'biblioteca-reserva'
         IMAGE_TAG = "${APP_NAME}:${env.BUILD_ID}"
     }
 
