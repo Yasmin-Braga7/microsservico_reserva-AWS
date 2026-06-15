@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   biblioteca-reserva:
@@ -25,7 +25,15 @@ services:
     networks:
       - biblioteca-net
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9503/biblioteca/reserva"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9503/listar-ativas",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
