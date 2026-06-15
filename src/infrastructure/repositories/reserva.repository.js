@@ -9,14 +9,14 @@ class ReservaRepository {
 
     async findManyActive() {
         return this.prisma.reserva.findMany({
-            where: { status: { not: 0 } },
-            orderBy: { reserva_data_criacao: 'desc' }
+            where: { reserva_status: { not: 0 } },
+            orderBy: { reserva_data_reserva: 'desc' }
         });
     }
 
     async findById(reserva_id) {
         return this.prisma.reserva.findFirst({
-            where: { reserva_id, status: { not: 0 } }
+            where: { reserva_id, reserva_status: { not: 0 } }
         });
     }
 
@@ -34,78 +34,78 @@ class ReservaRepository {
     async findHistoryByReservaId(reserva_id) {
         return this.prisma.reservaHistorico.findMany({
             where: { reserva_id },
-            orderBy: { reserva_historico_data_alteracao: 'desc' }
+            orderBy: { reserva_historico_data: 'desc' }
         });
     }
 
     async findManyByUsuarioId(usuario_id) {
         return this.prisma.reserva.findMany({
-            where: { usuario_id, status: { not: 0 } }
+            where: { usuario_id: Number(usuario_id), reserva_status: { not: 0 } }
         });
     }
 
     async findManyByLivroIdAndStatus(livro_id, status) {
         return this.prisma.reserva.findMany({
-            where: { livro_id, status },
-            orderBy: { reserva_data_criacao: 'asc' }
+            where: { livro_id, reserva_status: status },
+            orderBy: { reserva_data_reserva: 'asc' }
         });
     }
 
     async findManyByStatus(status) {
         return this.prisma.reserva.findMany({
-            where: { status }
+            where: { reserva_status: status }
         });
     }
 
     async findManyVencidas(now) {
         return this.prisma.reserva.findMany({
-            where: { reserva_data_limite_retirada: { lt: now }, status: 1 }
+            where: { reserva_data_reserva: { lt: now }, reserva_status: 1 }
         });
     }
 
     async updateManyVencidasToStatus(now, status) {
         return this.prisma.reserva.updateMany({
-            where: { reserva_data_limite_retirada: { lt: now }, status: 1 },
-            data: { status }
+            where: { reserva_data_reserva: { lt: now }, reserva_status: 1 },
+            data: { reserva_status: status }
         });
     }
 
     async updateManyByUsuarioToStatus(usuario_id, status) {
         return this.prisma.reserva.updateMany({
-            where: { usuario_id, status: { not: 0 } },
-            data: { status }
+            where: { usuario_id: Number(usuario_id), reserva_status: { not: 0 } },
+            data: { reserva_status: status }
         });
     }
 
     async findManyRecentes(limit) {
         return this.prisma.reserva.findMany({
-            where: { status: { not: 0 } },
-            orderBy: { reserva_data_criacao: 'desc' },
+            where: { reserva_status: { not: 0 } },
+            orderBy: { reserva_data_reserva: 'desc' },
             take: limit
         });
     }
 
     async countByUsuarioAndLivro(usuario_id, livro_id) {
         return this.prisma.reserva.count({
-            where: { usuario_id, livro_id, status: { not: 0 } }
+            where: { usuario_id: Number(usuario_id), livro_id, reserva_status: { not: 0 } }
         });
     }
 
     async countByStatus(status) {
         return this.prisma.reserva.count({
-            where: { status }
+            where: { reserva_status: status }
         });
     }
 
     async countByLivroAndStatus(livro_id, status) {
         return this.prisma.reserva.count({
-            where: { livro_id, status: { not: 0 } }
+            where: { livro_id, reserva_status: { not: 0 } }
         });
     }
 
     async findManyHistoryGeral(limit) {
         return this.prisma.reservaHistorico.findMany({
-            orderBy: { reserva_historico_data_alteracao: 'desc' },
+            orderBy: { reserva_historico_data: 'desc' },
             take: limit
         });
     }
