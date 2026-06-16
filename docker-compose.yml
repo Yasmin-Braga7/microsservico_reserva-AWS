@@ -15,9 +15,9 @@ services:
       PORT: 9503
       DATABASE_URL: ${DATABASE_URL}
       RABBITMQ_URL: ${RABBITMQ_URL}
-      INFISICAL_CLIENT_ID: "c7349fd9-0cbf-46ce-b31e-d0f5dfcd6fc1"
-      INFISICAL_CLIENT_SECRET: "56ba915562cf841f6922c9e64c3adb23b417581ffad9f639d88d8969a84b8552"
-      INFISICAL_PROJECT_ID: "a53610fd-1c06-4c97-abfb-83db65f335a5"
+      INFISICAL_CLIENT_ID: "9407a4b1-03f1-4392-b460-afbea6868dbe"
+      INFISICAL_CLIENT_SECRET: "7a756ae7145da1a2869046b6bb2a5a292f82f72b81432d7d8f0baae204ce1aff"
+      INFISICAL_PROJECT_ID: "bfec726f-3e2c-416c-b106-82e1032f4c30"
       INFISICAL_ENV: "dev"
       INFISICAL_SITE_URL: "https://app.infisical.com"
     env_file:
@@ -42,3 +42,11 @@ services:
 networks:
   biblioteca_network:
     external: true
+
+
+
+
+INFISICAL_ENV="dev"
+INFISICAL_SITE_URL="https://app.infisical.com"
+
+
