@@ -52,10 +52,12 @@ class ReservaService {
 
             await tx.reservaHistorico.create({
                 data: {
-                    reserva_id: Number(id),
-                    reserva_historico_data: new Date(),
-                    reserva_historico_status: Number(reserva_status),
-                    motivo: motivo || 'Atualização de status'
+                    reserva_id:               Number(id),
+                    reserva_historico_data:   new Date(),
+                    // "motivo" não existe no schema Prisma (ReservaHistorico tem apenas
+                    // reserva_historico_id, reserva_historico_data, reserva_historico_status
+                    // e reserva_id). Remover evita crash P2009 do Prisma.
+                    reserva_historico_status: Number(reserva_status)
                 }
             });
 
@@ -162,10 +164,11 @@ class ReservaService {
             if (!reserva) throw new NotFoundError('Reserva não encontrada.');
             return tx.reservaHistorico.create({
                 data: {
-                    reserva_id: Number(id),
-                    reserva_historico_data: new Date(),
-                    reserva_historico_status: reserva.reserva_status,
-                    motivo
+                    reserva_id:               Number(id),
+                    reserva_historico_data:   new Date(),
+                    // "motivo" não existe no schema — o motivo fica apenas no log.
+                    // Se quiser persistênc ia, adicione a coluna no schema e rode migrate.
+                    reserva_historico_status: reserva.reserva_status
                 }
             });
         });

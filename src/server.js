@@ -72,11 +72,15 @@ const start = async () => {
       });
     });
 
-    // Registra as rotas injetando o controller como dependência
-    // Sem prefixo extra: o proxy do frontend (/api/reserva) já remove o prefixo
-    // antes de repassar a requisição, então as rotas devem ficar na raiz
-    // (ex: /listar-ativas, /criar), espelhando o padrão dos demais microsserviços.
-    fastify.register(reservaRoutes, { controller });
+    // Registra as rotas injetando o controller como dependência.
+    // O prefixo '/reserva' é obrigatório porque o reservaClient.js (microsserviço
+    // de Empréstimo) constrói as URLs com esse segmento, ex:
+    //   POST  http://biblioteca-reserva:9503/reserva/validar-conflito
+    //   GET   http://biblioteca-reserva:9503/reserva/usuario/listar/:id
+    //   PATCH http://biblioteca-reserva:9503/reserva/atualizar-status/:id
+    // Sem o prefixo o Fastify retornaria 404 → o error handler genérico
+    // elevava para 500 — causa raiz do erro observado no Yacht.
+    fastify.register(reservaRoutes, { prefix: '/reserva', controller });
 
     // 5. Inicialização do servidor na porta definida
     const port = process.env.PORT || 9503;

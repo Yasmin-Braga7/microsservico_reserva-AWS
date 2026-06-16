@@ -126,12 +126,14 @@ async function handleEmprestimoCriado(payload, reservaRepository) {
     return;
   }
 
-  // Busca reservas ativas do usuário para este livro
+  // Busca reservas ativas do usuário para este livro.
+  // ATENÇÃO: o schema Prisma usa "reserva_status" (não "status") e
+  // usuario_id é Int no banco — Number() é obrigatório.
   const reservas = await reservaRepository.prisma.reserva.findMany({
     where: {
-      usuario_id: String(usuarioId),
-      livro_id:   Number(livroId),
-      status:     ReservaStatus.ACTIVE,
+      usuario_id:     Number(usuarioId),   // schema: Int
+      livro_id:       Number(livroId),
+      reserva_status: ReservaStatus.ACTIVE, // schema: reserva_status, não status
     },
   });
 
@@ -141,19 +143,24 @@ async function handleEmprestimoCriado(payload, reservaRepository) {
   }
 
   for (const res of reservas) {
-    // Cancela a reserva e registra no histórico
+    // Cancela a reserva e registra no histórico.
+    // Campos corrigidos para espelhar o schema Prisma:
+    //   - reserva.data: "reserva_status" (não "status")
+    //   - reservaHistorico: "reserva_historico_status" (único campo de status
+    //     disponível — não existem _anterior/_novo nem "motivo" no schema)
     await reservaRepository.transaction(async (tx) => {
       await tx.reserva.update({
         where: { reserva_id: res.reserva_id },
-        data:  { status: ReservaStatus.INACTIVE },
+        data:  { reserva_status: ReservaStatus.INACTIVE }, // campo correto do schema
       });
 
       await tx.reservaHistorico.create({
         data: {
-          reserva_id:                        res.reserva_id,
-          reserva_historico_status_anterior: ReservaStatus.ACTIVE,
-          reserva_historico_status_novo:     ReservaStatus.INACTIVE,
-          motivo: `Empréstimo ${emprestimoId} realizado — reserva cancelada automaticamente via evento RabbitMQ.`,
+          reserva_id:               res.reserva_id,
+          reserva_historico_data:   new Date(),              // campo obrigatório no schema
+          reserva_historico_status: ReservaStatus.INACTIVE,  // schema: reserva_historico_status
+          // "motivo" e "reserva_historico_status_anterior/novo" NÃO existem
+          // no schema — removidos para evitar crash P2009 do Prisma.
         },
       });
     });
@@ -182,10 +189,12 @@ async function handleDevolucaoRegistrada(payload, reservaRepository) {
     return;
   }
 
-  // Busca a reserva mais antiga ativa para este livro
+  // Busca a reserva mais antiga ativa para este livro.
+  // Corrigido: campo "reserva_status" (não "status") e ordenação por
+  // "reserva_data_reserva" (não "reserva_data_criacao" — não existe no schema).
   const fila = await reservaRepository.prisma.reserva.findMany({
-    where:   { livro_id: Number(livroId), status: ReservaStatus.ACTIVE },
-    orderBy: { reserva_data_criacao: 'asc' },
+    where:   { livro_id: Number(livroId), reserva_status: ReservaStatus.ACTIVE },
+    orderBy: { reserva_data_reserva: 'asc' }, // campo correto do schema
     take:    1,
   });
 
@@ -196,14 +205,15 @@ async function handleDevolucaoRegistrada(payload, reservaRepository) {
 
   const proxima = fila[0];
 
-  // Registra notificação no histórico da reserva
+  // Registra notificação no histórico da reserva.
+  // Campos corrigidos: "reserva_historico_status" (não _anterior/_novo),
+  // "reserva_historico_data" obrigatório, sem "motivo" (não existe no schema).
   await reservaRepository.transaction(async (tx) => {
     await tx.reservaHistorico.create({
       data: {
-        reserva_id:                        proxima.reserva_id,
-        reserva_historico_status_anterior: proxima.status,
-        reserva_historico_status_novo:     proxima.status, // status não muda, apenas notifica
-        motivo: `Exemplar ${exemplarId ?? 'N/A'} devolvido (empréstimo ${emprestimoId}). Livro disponível para retirada.`,
+        reserva_id:               proxima.reserva_id,
+        reserva_historico_data:   new Date(),
+        reserva_historico_status: proxima.reserva_status, // campo correto
       },
     });
   });

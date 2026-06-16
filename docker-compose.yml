@@ -23,7 +23,8 @@ services:
     env_file:
       - .env
     networks:
-      - biblioteca-net
+      - biblioteca-net  # corrigido: era "biblioteca_network" (underscore) mas o serviço
+                        # referenciava "biblioteca-net" (hífen) — container ficava isolado
     healthcheck:
       test:
         [
@@ -32,7 +33,9 @@ services:
           "--no-verbose",
           "--tries=1",
           "--spider",
-          "http://localhost:9503/listar-ativas",
+          # corrigido: o prefixo /reserva foi adicionado ao server.js,
+          # logo o health endpoint correto agora é /reserva/listar-ativas
+          "http://localhost:9503/reserva/listar-ativas",
         ]
       interval: 30s
       timeout: 10s
@@ -40,13 +43,7 @@ services:
       start_period: 20s
 
 networks:
-  biblioteca_network:
+  # Nome padronizado para "biblioteca-net" — igual ao que o serviço declara acima
+  # e ao que o docker-compose do Empréstimo também usa.
+  biblioteca-net:
     external: true
-
-
-
-
-INFISICAL_ENV="dev"
-INFISICAL_SITE_URL="https://app.infisical.com"
-
-
