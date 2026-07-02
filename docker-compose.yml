@@ -13,11 +13,12 @@ services:
     environment:
       NODE_ENV: production
       PORT: 9503
-      INFISICAL_CLIENT_ID: "9407a4b1-03f1-4392-b460-afbea6868dbe"
-      INFISICAL_CLIENT_SECRET: "7a756ae7145da1a2869046b6bb2a5a292f82f72b81432d7d8f0baae204ce1aff"
-      INFISICAL_PROJECT_ID: "bfec726f-3e2c-416c-b106-82e1032f4c30"
-      INFISICAL_ENV: "dev"
-      INFISICAL_SITE_URL: "https://app.infisical.com"
+      # Valores vêm do .env local (não commitado) — não deixar valor fixo aqui.
+      INFISICAL_CLIENT_ID: ${INFISICAL_CLIENT_ID}
+      INFISICAL_CLIENT_SECRET: ${INFISICAL_CLIENT_SECRET}
+      INFISICAL_PROJECT_ID: ${INFISICAL_PROJECT_ID}
+      INFISICAL_ENV: ${INFISICAL_ENV:-dev}
+      INFISICAL_SITE_URL: ${INFISICAL_SITE_URL:-https://app.infisical.com}
     env_file:
       - .env
     networks:
