@@ -20,14 +20,17 @@ async function loadSecrets() {
   try {
     console.log('[Infisical] Autenticando no Infisical...');
     const client = new InfisicalSDK({ siteUrl });
-    
+
     await client.auth().universalAuth.login({
       clientId,
       clientSecret
     });
 
     console.log(`[Infisical] Buscando segredos para o projeto ${projectId} no ambiente "${environment}"...`);
-    const secrets = await client.secrets().listSecrets({
+
+    // Correção: listSecrets() retorna um objeto { secrets: [...] }, não a lista direto.
+    // Faltava desestruturar, por isso o for...of quebrava com "secrets is not iterable".
+    const { secrets } = await client.secrets().listSecrets({
       projectId,
       environment
     });
@@ -35,7 +38,7 @@ async function loadSecrets() {
     for (const secret of secrets) {
       process.env[secret.secretKey] = secret.secretValue;
     }
-    console.log('[Infisical] Segredos carregados com sucesso no process.env.');
+    console.log(`[Infisical] ${secrets.length} segredo(s) carregado(s) com sucesso no process.env.`);
   } catch (error) {
     console.error('[Infisical] Erro ao carregar segredos do Infisical:', error.message);
     throw error;
