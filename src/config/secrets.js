@@ -30,9 +30,11 @@ async function loadSecrets() {
 
     // Correção: listSecrets() retorna um objeto { secrets: [...] }, não a lista direto.
     // Faltava desestruturar, por isso o for...of quebrava com "secrets is not iterable".
+    const secretPath = process.env.INFISICAL_SECRET_PATH || '/';
     const { secrets } = await client.secrets().listSecrets({
       projectId,
-      environment
+      environment,
+      secretPath
     });
 
     for (const secret of secrets) {
